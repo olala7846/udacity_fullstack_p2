@@ -7,15 +7,19 @@ import psycopg2
 from collections import namedtuple
 
 
-def connect():
-    """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+def connect(database_name="tournament"):
+    """Connect to the PostgreSQL database.  Returns a database connection. and a cursor"""
+    try:
+        conn = psycopg2.connect("dbname={}".format(database_name))
+        cursor = conn.cursor()
+        return conn, cursor
+    except:
+        print "Error trying connect to DB {}".format(database_name)
 
 
 def deleteMatches():
     """Remove all the match records from the database."""
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("""DELETE FROM match;""")
     conn.commit()
     conn.close()
@@ -23,8 +27,7 @@ def deleteMatches():
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("""DELETE FROM player;""")
     conn.commit()
     conn.close()
@@ -32,8 +35,7 @@ def deletePlayers():
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("""SELECT count(*) from player;""")
     result = cur.fetchone()
     conn.close()
@@ -49,8 +51,7 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("INSERT INTO player (name) VALUES (%s);", (name, ))
     conn.commit()
     conn.close()
@@ -69,8 +70,7 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("""SELECT * FROM player_standings""")
     results = cur.fetchall()
     conn.close()
@@ -85,8 +85,7 @@ def reportMatch(winner, loser):
       loser:  the id number of the player who lost
     """
     # should raise exception on input error? maybe winner == loser
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute(
         "INSERT INTO MATCH (winner, loser) VALUES (%s, %s);", (winner, loser))
     conn.commit()
@@ -111,6 +110,10 @@ def swissPairings():
     standings = playerStandings()
     pairings = []
     # iterate 2 at a time and start from index 1 to avoid handling odd list
+    if len(standings) % 2 != 0:
+        print "Number of players should be even"
+        return;
+
     for i in xrange(1, len(standings), 2):
         Player = namedtuple('Player', ['id', 'name', 'wins', 'matches'])
         p1 = Player(*standings[i-1])
