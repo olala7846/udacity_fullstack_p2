@@ -6,30 +6,47 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+-- drop the tournament database to avoid duplicate
+DROP DATABASE IF EXISTS tournament;
+-- create a database name tournament
+CREATE DATABASE tournament;
+-- connect to tournament
+\c tournament
+
+-- create tables
 CREATE TABLE player (
-    id serial primary key,
+    player_id serial primary key,
     name text
 );
 
 CREATE TABLE match (
-    id serial primary key,
-    winner integer references player (id),
-    loser integer references player (id)
-    ON DELETE CASCADE
+    match_id serial primary key,
+    winner integer references player
+    ON DELETE CASCADE,
+    loser integer references player
+    ON DELETE CASCADE,
+    CHECK (winner <> loser)
 );
 
+-- create view
 CREATE VIEW match_record AS
-SELECT player.id, player.name, count(match.id) AS matched 
+SELECT player.player_id, player.name, count(match.match_id) AS matched 
 FROM player
 LEFT JOIN match
-ON player.id = match.winner
-OR player.id = match.loser
-GROUP BY player.id;
+ON player.player_id = match.winner
+OR player.player_id = match.loser
+GROUP BY player.player_id;
 
 CREATE VIEW won_record AS
-SELECT player.id, count(match.winner) AS won
+SELECT player.player_id, count(match.winner) AS won
 FROM player
 LEFT JOIN match
-ON player.id = match.winner
-GROUP BY player.id;
+ON player.player_id = match.winner
+GROUP BY player.player_id;
 
+CREATE VIEW player_standings AS
+SELECT won_record.player_id, name, won, matched
+FROM won_record
+JOIN match_record
+ON won_record.player_id = match_record.player_id
+ORDER BY won DESC;

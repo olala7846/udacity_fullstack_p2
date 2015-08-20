@@ -71,13 +71,7 @@ def playerStandings():
     """
     conn = connect()
     cur = conn.cursor()
-    cur.execute("""
-    SELECT won_record.id, name, won, matched
-    FROM won_record
-    JOIN match_record
-    ON won_record.id = match_record.id
-    ORDER BY won DESC;
-    """)
+    cur.execute("""SELECT * FROM player_standings""")
     results = cur.fetchall()
     conn.close()
     return results
