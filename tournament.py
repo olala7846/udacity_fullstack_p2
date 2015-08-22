@@ -111,7 +111,7 @@ def namedPlayerStandings():
 
     Returns;
         A list of namedtouples player with ['id', 'name', 'wins', 'matches']
-    """ 
+    """
     Player = namedtuple('Player', ['id', 'name', 'wins', 'matches'])
     return [Player(*p) for p in playerStandings()]
 
@@ -119,12 +119,12 @@ def namedPlayerStandings():
 def recursivePairingWithNamedData(currentPlayerStandings):
     """Pair players by currentPlayerStandings without rematch
 
-    Recursively try to pair players by current ranking and check 
+    Recursively try to pair players by current ranking and check
     if matched before, recursively try every combinations until
     any available pairing found.
 
     Returns:
-        A list of pairing in touple 
+        A list of pairing in touple
         (player1_id, player1_name, player2_id, player2_name)
         and return None if no possible pairings
     """
@@ -181,7 +181,6 @@ def swissPairings():
     if countPlayers() % 2 != 0:
         print "# of player should be even"
         return None
-        
     pairings = pairingsWithoutRematch()
     if not pairings:
         print "Impossible to pair without rematch"
