@@ -92,6 +92,52 @@ def reportMatch(winner, loser):
     conn.close()
 
 
+def hasPreviouslyMatchd(pid1, pid2):
+    conn, cur = connect()
+    cur.execute("""
+        SELECT * FROM matches
+        WHERE (winner = {0} AND loser = {1})
+        OR (winner = {1} AND loser = {0})
+        """)
+    results = conn.fetchall()
+    conn.close()
+    return len(results) > 0
+
+
+def namedPlayerStandings():
+    Player = namedtuple('Player', ['id', 'name', 'wins', 'matches'])
+    return [Player(*p) for p in playerStandings()]
+
+
+def recursivePairingWithNamedData(namedCurrentStandings):
+    # 2 players left, if previously matched return None
+    if len(namedCurrentStandings) == 2:
+        p1 = currentStandings[0]
+        p2 = currentStandings[1]
+        if not hasPreviouslyMatchd(p1.id, p2.id):
+            return [(p1.id, p1.name), (p2.id, p2.name)]
+        else:
+            return None
+    else:
+        p1 = currentStandings[0]
+        for p2 in currentStandings[1:]:
+            leftInStandings = list(currentStandings)
+            leftInStandings.remove(p1)
+            leftInStandings.remove(p2)
+            subPairing = recursivePairingWithNamedData(leftInStandings)
+            if subPairing is None:
+                continue
+            else:
+                return [(p1.id, p1.name, p2.id, p2.name)] + subPairing
+        return None
+
+
+def pairingsWithoutRematch():
+    """Returns pairing without player rematch, return Node if impossible"""
+    namedCurrentStandings = namedPlayerStandings()
+    return recursivePairingWithNamedData(namedCurrentStandings)
+
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
 
@@ -108,16 +154,9 @@ def swissPairings():
         name2: the second player's name
     """
     standings = playerStandings()
-    pairings = []
-    # iterate 2 at a time and start from index 1 to avoid handling odd list
-    if len(standings) % 2 != 0:
-        print "Number of players should be even"
-        return;
+    if countPlayers() % 2 != 0
+        print "# of player should be even"
+        return None
 
-    for i in xrange(1, len(standings), 2):
-        Player = namedtuple('Player', ['id', 'name', 'wins', 'matches'])
-        p1 = Player(*standings[i-1])
-        p2 = Player(*standings[i])
-        new_pair = (p1.id, p1.name, p2.id, p2.name)
-        pairings.append(new_pair)
-    return pairings
+    return pairingsWithoutRematch()
+
