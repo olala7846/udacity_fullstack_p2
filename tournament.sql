@@ -15,22 +15,22 @@ CREATE DATABASE tournament;
 
 -- create tables
 CREATE TABLE player (
-    player_id serial primary key,
+    player_id SERIAL PRIMARY KEY,
     name text
 );
 
 CREATE TABLE match (
-    match_id serial primary key,
-    winner integer references player
+    match_id SERIAL PRIMARY KEY,
+    winner integer REFERENCES player
     ON DELETE CASCADE,
-    loser integer references player
+    loser integer REFERENCES player
     ON DELETE CASCADE,
     CHECK (winner <> loser)
 );
 
 -- create view
 CREATE VIEW match_record AS
-SELECT player.player_id, player.name, count(match.match_id) AS matched 
+SELECT player.player_id, player.name, COUNT(match.match_id) AS matched 
 FROM player
 LEFT JOIN match
 ON player.player_id = match.winner
