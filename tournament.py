@@ -142,6 +142,8 @@ def recursivePairingWithNamedData(currentPlayerStandings):
     else:
         p1 = currentPlayerStandings[0]
         for p2 in currentPlayerStandings[1:]:
+            if hasPreviouslyMatchd(p1.id, p2.id):
+                continue
             # Recursively pair with a copy of the rest players
             playerStandingsCopy = list(currentPlayerStandings)
             playerStandingsCopy.remove(p1)
