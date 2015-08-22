@@ -95,47 +95,71 @@ def reportMatch(winner, loser):
 def hasPreviouslyMatchd(pid1, pid2):
     conn, cur = connect()
     cur.execute("""
-        SELECT * FROM matches
+        SELECT * FROM match
         WHERE (winner = {0} AND loser = {1})
         OR (winner = {1} AND loser = {0})
-        """)
-    results = conn.fetchall()
+        """.format(pid1, pid2))
+    results = cur.fetchall()
     conn.close()
     return len(results) > 0
 
 
 def namedPlayerStandings():
+    """ like playerStandings() but with named tuples
+
+    This method should return a list of named touple ordered by # of wins
+
+    Returns;
+        A list of namedtouples player with ['id', 'name', 'wins', 'matches']
+    """ 
     Player = namedtuple('Player', ['id', 'name', 'wins', 'matches'])
     return [Player(*p) for p in playerStandings()]
 
 
-def recursivePairingWithNamedData(namedCurrentStandings):
-    # 2 players left, if previously matched return None
-    if len(namedCurrentStandings) == 2:
-        p1 = currentStandings[0]
-        p2 = currentStandings[1]
+def recursivePairingWithNamedData(currentPlayerStandings):
+    """Pair players by currentPlayerStandings without rematch
+
+    Recursively try to pair players by current ranking and check 
+    if matched before, recursively try every combinations until
+    any available pairing found.
+
+    Returns:
+        A list of pairing in touple 
+        (player1_id, player1_name, player2_id, player2_name)
+        and return None if no possible pairings
+    """
+    # 2 players left, return if not previously matched
+    if len(currentPlayerStandings) == 2:
+        p1 = currentPlayerStandings[0]
+        p2 = currentPlayerStandings[1]
         if not hasPreviouslyMatchd(p1.id, p2.id):
-            return [(p1.id, p1.name), (p2.id, p2.name)]
+            return [(p1.id, p1.name, p2.id, p2.name)]
         else:
             return None
+    # more than 2 players, always select first player
+    # and pair with the rest players according to ranking
+    # till found a available pairing
     else:
-        p1 = currentStandings[0]
-        for p2 in currentStandings[1:]:
-            leftInStandings = list(currentStandings)
-            leftInStandings.remove(p1)
-            leftInStandings.remove(p2)
-            subPairing = recursivePairingWithNamedData(leftInStandings)
-            if subPairing is None:
-                continue
-            else:
+        p1 = currentPlayerStandings[0]
+        for p2 in currentPlayerStandings[1:]:
+            # Recursively pair with a copy of the rest players
+            playerStandingsCopy = list(currentPlayerStandings)
+            playerStandingsCopy.remove(p1)
+            playerStandingsCopy.remove(p2)
+            subPairing = recursivePairingWithNamedData(playerStandingsCopy)
+            if subPairing is not None:
+                # found available paring! concact and return
                 return [(p1.id, p1.name, p2.id, p2.name)] + subPairing
+            else:
+                # (p1, p2) is not a possible pairing, try next
+                continue
         return None
 
 
 def pairingsWithoutRematch():
     """Returns pairing without player rematch, return Node if impossible"""
-    namedCurrentStandings = namedPlayerStandings()
-    return recursivePairingWithNamedData(namedCurrentStandings)
+    namedCurrentStanding = namedPlayerStandings()
+    return recursivePairingWithNamedData(namedCurrentStanding)
 
 
 def swissPairings():
@@ -154,9 +178,12 @@ def swissPairings():
         name2: the second player's name
     """
     standings = playerStandings()
-    if countPlayers() % 2 != 0
+    if countPlayers() % 2 != 0:
         print "# of player should be even"
         return None
-
-    return pairingsWithoutRematch()
-
+        
+    pairings = pairingsWithoutRematch()
+    if not pairings:
+        print "Impossible to pair without rematch"
+    else:
+        return pairingsWithoutRematch()
