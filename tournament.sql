@@ -22,7 +22,7 @@ CREATE DATABASE tournament;
 -- create tables
 CREATE TABLE player (
     player_id SERIAL PRIMARY KEY,
-    name text
+    name text NOT NULL
 );
 
 CREATE TABLE match (
