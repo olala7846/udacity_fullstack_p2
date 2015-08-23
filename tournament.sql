@@ -6,6 +6,12 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+-- close db connections except self
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = 'TARGET_DB'
+AND pid <> pg_backend_pid();
+
 -- drop the tournament database to avoid duplicate
 DROP DATABASE IF EXISTS tournament;
 -- create a database name tournament
